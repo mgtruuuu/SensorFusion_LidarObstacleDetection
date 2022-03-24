@@ -255,7 +255,7 @@ void cityBlock(
     // This line has problem (Memory leak and Too many recursion function)!!!!!
     //  
     //
-    std::vector<pcl::Indices> clusterIndices{ euclideanCluster(vectorClusters, ptr_tree, 3.0) };
+    std::vector<std::vector<int>> clusterIndices{ euclideanCluster(vectorClusters, ptr_tree, 3.0) };
 
 
 
