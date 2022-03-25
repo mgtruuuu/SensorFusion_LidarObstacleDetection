@@ -83,7 +83,7 @@ struct KdTree {
 	std::vector<int> search(std::vector<float> target, float distanceTol) {
 		
 		
-		ids;
+		std::vector<int> ids;
 		searchHelper(target, ptr_root, 0, distanceTol, ids);
 
 		return ids;
