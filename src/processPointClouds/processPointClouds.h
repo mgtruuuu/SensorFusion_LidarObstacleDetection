@@ -12,12 +12,14 @@
 #include <pcl/segmentation/sac_segmentation.h>
 #include <pcl/segmentation/extract_clusters.h>
 #include <pcl/common/transforms.h>
+#include <ctime>
+#include <chrono>
+#include <filesystem>
 #include <iostream> 
 #include <string>  
 #include <vector>
-#include <ctime>
-#include <chrono>
 #include "../render/box.h"
+
 
 
 
@@ -50,6 +52,7 @@ public:
             int maxIterations, 
             float distanceThreshold);
 
+
     std::vector<typename pcl::PointCloud<PointT>::Ptr>
         Clustering(
             typename pcl::PointCloud<PointT>::Ptr cloud,
@@ -61,7 +64,7 @@ public:
 
     typename pcl::PointCloud<PointT>::Ptr loadPcd(std::string file);
 
-    std::vector<boost::filesystem::path> streamPcd(std::string dataPath);
+    std::vector<std::filesystem::path> streamPcd(std::string dataPath);
 };
 
 #endif /* PROCESSPOINTCLOUDS_H_ */

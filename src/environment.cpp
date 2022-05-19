@@ -6,21 +6,16 @@
 #include "render/render.h"
 #include "cluster.h"
 #include "kdtree.h"
+#include "segment.h"
 #include "processPointClouds/processPointClouds.h"
 // using templates for processPointClouds so also include .cpp to help linker
 #include "processPointClouds/processPointClouds.cpp"
 
+#include <filesystem>
 #include <unordered_set>
 
 
-
-//setAngle: SWITCH CAMERA ANGLE {XY, TopDown, Side, FPS}
 void initCamera(CameraAngle setAngle, pcl::visualization::PCLVisualizer::Ptr& viewer);
-
-std::unordered_set<int> newRansacPlane(
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,
-    int maxIterations,
-    float distanceTol);
 
 void cityBlock(
     pcl::visualization::PCLVisualizer::Ptr& viewer,
@@ -35,12 +30,13 @@ int main(int argc, char** argv) {
     pcl::visualization::PCLVisualizer::Ptr viewer{
         new pcl::visualization::PCLVisualizer{ "3D Viewer" }
     };
-    CameraAngle setAngle{ XY };
+    //setAngle: SWITCH CAMERA ANGLE {XY, TopDown, Side, FPS}
+    CameraAngle setAngle{ CameraAngle::XY };
     initCamera(setAngle, viewer);
 
 
-    ProcessPointClouds<pcl::PointXYZI>* pointProcessorI{ new ProcessPointClouds<pcl::PointXYZI>{} };
-    std::vector<boost::filesystem::path> stream{ pointProcessorI->streamPcd("../src/sensors/data/pcd/data_1") };
+    ProcessPointClouds<pcl::PointXYZI>* pointProcessorI{ new ProcessPointClouds<pcl::PointXYZI> };
+    std::vector<std::filesystem::path> stream{ pointProcessorI->streamPcd("../src/sensors/data/pcd/data_1") };
     auto streamIterator{ stream.begin() };
     pcl::PointCloud<pcl::PointXYZI>::Ptr inputCloudI;
 
@@ -77,7 +73,7 @@ int main(int argc, char** argv) {
 
 void initCamera(CameraAngle setAngle, pcl::visualization::PCLVisualizer::Ptr& viewer) {
 
-    viewer->setBackgroundColor(0, 0, 0);
+    viewer->setBackgroundColor(.0, .0, .0);
 
     // Set camera position and angle
     viewer->initCameraParameters();
@@ -86,20 +82,20 @@ void initCamera(CameraAngle setAngle, pcl::visualization::PCLVisualizer::Ptr& vi
     int distance{ 16 };
 
     switch (setAngle) {
-    case XY:
-        viewer->setCameraPosition(-distance, -distance, distance, 1, 1, 0);
+    case CameraAngle::XY:
+        viewer->setCameraPosition(-distance, -distance, distance, 1.0, 1.0, .0);
         break;
-    case TopDown:
-        viewer->setCameraPosition(0, 0, distance, 1, 0, 1);
+    case CameraAngle::TopDown:
+        viewer->setCameraPosition(.0, .0, distance, 1.0, .0, 1.0);
         break;
-    case Side:
-        viewer->setCameraPosition(0, -distance, 0, 0, 0, 1);
+    case CameraAngle::Side:
+        viewer->setCameraPosition(.0, -distance, .0, .0, .0, 1.0);
         break;
-    case FPS:
-        viewer->setCameraPosition(-10, 0, 0, 0, 0, 1);
+    case CameraAngle::FPS:
+        viewer->setCameraPosition(-10.0, .0, .0, .0, .0, 1.0);
     }
 
-    if (setAngle != FPS)
+    if (setAngle != CameraAngle::FPS)
         viewer->addCoordinateSystem(1.0);
 }
 
@@ -108,80 +104,7 @@ void initCamera(CameraAngle setAngle, pcl::visualization::PCLVisualizer::Ptr& vi
 
 
 
-std::unordered_set<int> newRansacPlane(
-    pcl::PointCloud<pcl::PointXYZI>::Ptr cloud,
-    int maxIterations,
-    float distanceTol) {
 
-    
-    auto startTime{ std::chrono::steady_clock::now() };
-    
-    
-    srand(time(nullptr));
-
-    std::unordered_set<int> inliersResult;
-
-    while (maxIterations--) {
-
-        // Randomly sample subset and fit plane.
-
-        // Randomly pick three points.
-        std::unordered_set<int> inliers;
-        while (inliers.size() < 3)
-            inliers.insert(rand() % (cloud->points.size()));
-
-
-        float x1{}, y1{}, z1{}, x2{}, y2{}, z2{}, x3{}, y3{}, z3{};
-
-        auto itr{ inliers.begin() };
-        x1 = cloud->points[*itr].x;
-        y1 = cloud->points[*itr].y;
-        z1 = cloud->points[*itr].z;
-        ++itr;
-        x2 = cloud->points[*itr].x;
-        y2 = cloud->points[*itr].y;
-        z2 = cloud->points[*itr].z;
-        ++itr;
-        x3 = cloud->points[*itr].x;
-        y3 = cloud->points[*itr].y;
-        z3 = cloud->points[*itr].z;
-
-        // Ax + By + Cz + D = 0
-        float a{ (y2 - y1) * (z3 - z1) - (z2 - z1) * (y3 - y1) };
-        float b{ (z2 - z1) * (x3 - x1) - (x2 - x1) * (z3 - z1) };
-        float c{ (x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1) };
-        float d{ -(a * x1 + b * y1 + c * z1) };
-
-
-
-        for (int index{ 0 }; index < cloud->points.size(); ++index) {
-            if (inliers.count(index) != 0)	    continue;
-
-            pcl::PointXYZI point{ cloud->points[index] };
-            float x4{ point.x };
-            float y4{ point.y };
-            float z4{ point.z };
-
-            // Measure distance between every point and fitted plane.
-            float distance{ fabs(a * x4 + b * y4 + c * z4 + d) / sqrt(a * a + b * b + c * c) };
-
-            // If distance is smaller than threshold, then count it as inlier.
-            if (distance <= distanceTol)	inliers.insert(index);
-        }
-
-        // Return indices of inliers from fitted line with most inliers.
-        if (inliers.size() > inliersResult.size())
-            inliersResult = inliers;
-    }
-
-
-    auto endTime{ std::chrono::steady_clock::now() };
-    auto elapsedTime{ std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime) };
-    std::cout << "Ransac took " << elapsedTime.count() << " milliseconds." << std::endl;
-
-
-    return inliersResult;
-}
 
 
 
@@ -201,41 +124,34 @@ void cityBlock(
 
     inputCloud = pointProcessor->FilterCloud(inputCloud, 0.3, Eigen::Vector4f{ -10.0f, -5.0f, -2.0f, 1.0f }, Eigen::Vector4f{ 30.0f, 8.0f, 1.0f, 1.0f });
 
+    pcl::PointCloud<pcl::PointXYZI>::Ptr planeCloud{ new pcl::PointCloud<pcl::PointXYZI> };
+    pcl::PointCloud<pcl::PointXYZI>::Ptr obstCloud{  new pcl::PointCloud<pcl::PointXYZI> };
+
     std::unordered_set<int> inliers{ newRansacPlane(inputCloud, 25, 0.3f) };
 
-    pcl::PointCloud<pcl::PointXYZI>::Ptr cloudInliers{  new pcl::PointCloud<pcl::PointXYZI>{} };
-    pcl::PointCloud<pcl::PointXYZI>::Ptr cloudOutliers{ new pcl::PointCloud<pcl::PointXYZI>{} };
 
-    for (int index{ 0 }; index < inputCloud->points.size(); ++index) {
-        pcl::PointXYZI point{ inputCloud->points[index] };
 
-        if (inliers.count(index))
-            cloudInliers->points.push_back(point);
-        else
-            cloudOutliers->points.push_back(point);
-    }
+    std::pair<pcl::PointCloud<pcl::PointXYZI>::Ptr, pcl::PointCloud<pcl::PointXYZI>::Ptr> segmentCloud{
+        segmentPointClouds(inliers, inputCloud, planeCloud, obstCloud)
+    };
+
 
     if (inliers.size()) {
-        renderPointCloud(viewer, cloudInliers,  "inliers",  Color{ 0.0f, 1.0f, 0.0f });
-        renderPointCloud(viewer, cloudOutliers, "outliers", Color{ 1.0f, 0.0f, 0.0f });
+        renderPointCloud(viewer, planeCloud, "inliers", Color{ 0.0f, 1.0f, 0.0f });
+        //renderPointCloud(viewer, cloudOutliers, "outliers", Color{ 0.0f, 0.0f, 1.0f });
     }
     else {
         std::cout << "Couldn't estimate a planar model for the given dataset." << std::endl;
         renderPointCloud(viewer, inputCloud, "data");
     }
 
-    std::pair<pcl::PointCloud<pcl::PointXYZI>::Ptr, pcl::PointCloud<pcl::PointXYZI>::Ptr> segmentCloud{ 
-        cloudInliers, cloudOutliers 
-    };
 
-
-
-    //pcl::PointXYZI aaa;
 
 
     std::vector<std::vector<float>> vectorClusters;
     
     for (int index{ 0 }; index < segmentCloud.first->points.size(); ++index) {
+        
         std::vector<float> temp;
         temp.push_back(segmentCloud.first->points[index].x);
         temp.push_back(segmentCloud.first->points[index].y);
@@ -244,29 +160,21 @@ void cityBlock(
         vectorClusters.push_back(temp);
     }
 
-    KdTree* ptr_tree{ new KdTree{} };
+    KdTree* ptr_tree{ new KdTree };
     for (int i{ 0 }; i < vectorClusters.size(); ++i)
         ptr_tree->insert(vectorClusters[i], i);
 
-
-
-    //
-    // 
-    // This line has problem (Memory leak and Too many recursion function)!!!!!
-    //  
-    //
-    std::vector<std::vector<int>> clusterIndices{ euclideanCluster(vectorClusters, ptr_tree, 3.0) };
-
-
+    //                                                                                   3.0
+    std::vector<std::vector<int>> clusterIndices{ euclideanCluster(vectorClusters, ptr_tree, 1.0) };
 
 
     std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> cloudClusters;
 
     for (std::vector<int> getIndices : clusterIndices) {
 
-        pcl::PointCloud<pcl::PointXYZI>::Ptr cloudCluster{ new pcl::PointCloud<pcl::PointXYZI> {} };
+        pcl::PointCloud<pcl::PointXYZI>::Ptr cloudCluster{ new pcl::PointCloud<pcl::PointXYZI> };
 
-        for (int index : getIndices) {
+        for (auto index : getIndices) {
             cloudCluster->points.push_back(segmentCloud.first->points[index]);
         }
 
@@ -280,7 +188,7 @@ void cityBlock(
 
 
     int clusterId{ 0 };
-    std::vector<Color> colors{ Color{ 1, 0, 0 }, Color{ 1, 1, 0 }, Color{ 0, 0, 1 } };
+    std::vector<Color> colors{ Color{ 1.0f, 1.0f, .0f }, Color{ .0f, 1.0f, 1.0f }, Color{ 1.0f, .0f, 1.0f } };
 
     for (pcl::PointCloud<pcl::PointXYZI>::Ptr cluster : cloudClusters) {
 

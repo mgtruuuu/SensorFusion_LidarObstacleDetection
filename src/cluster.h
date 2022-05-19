@@ -17,7 +17,7 @@ void clusterHelper(
     int indice,
     const std::vector<std::vector<float>> points,
     std::vector<int>& cluster,
-    std::vector<bool> processed,
+    std::vector<bool>& processed,
     KdTree* ptr_tree,
     float distanceTol);
 
@@ -49,15 +49,11 @@ pcl::visualization::PCLVisualizer::Ptr initScene(Box window, int zoom) {
 
 
 
-//
-//
-// Too many recursion...
-//
 void clusterHelper(
     int indice,
     const std::vector<std::vector<float>> points,
     std::vector<int>& cluster,
-    std::vector<bool> processed,
+    std::vector<bool>& processed,
     KdTree* ptr_tree,
     float distanceTol) {
 
@@ -97,6 +93,13 @@ std::vector<std::vector<int>> euclideanCluster(
 
     return clusters;
 }
+
+
+
+
+
+
+
 
 
 

@@ -7,6 +7,10 @@ set(CMAKE_CXX_FLAGS, "${CXX_FLAGS}")
 
 project(playback)
 
+# Edit this line for your environments...
+SET(PCL_DIR "D:/github_repository/vcpkg/installed/x64-windows/share/pcl")
+
+# Check the version...
 find_package(PCL 1.11 REQUIRED)
 
 include_directories(${PCL_INCLUDE_DIRS})

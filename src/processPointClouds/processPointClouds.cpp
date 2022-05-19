@@ -52,12 +52,12 @@ typename pcl::PointCloud<PointT>::Ptr ProcessPointClouds<PointT>::FilterCloud(
 
     std::vector<int> indices;
     pcl::CropBox<PointT> roof{ true };
-    roof.setMin(Eigen::Vector4f{ -1.5, -1.7, -1, 1 });
-    roof.setMax(Eigen::Vector4f{ 2.6, 1.7, -0.4, 1 });
+    roof.setMin(Eigen::Vector4f{ -1.5f, -1.7f, -1.0f, 1.0f });
+    roof.setMax(Eigen::Vector4f{ 2.6f, 1.7f, -0.4f, 1.0f });
     roof.setInputCloud(cloudRegion);
     roof.filter(indices);
 
-    pcl::PointIndices::Ptr inliers{ new pcl::PointIndices{} };
+    pcl::PointIndices::Ptr inliers{ new pcl::PointIndices };
     for (int point : indices)
         inliers->indices.push_back(point);
 
@@ -84,8 +84,8 @@ ProcessPointClouds<PointT>::SeparateClouds(
     typename pcl::PointCloud<PointT>::Ptr cloud) {
 
     // TODO: Create two new point clouds, one cloud with obstacles and other with segmented plane
-    typename pcl::PointCloud<PointT>::Ptr obstCloud { new pcl::PointCloud<PointT>{} };
-    typename pcl::PointCloud<PointT>::Ptr planeCloud{ new pcl::PointCloud<PointT>{} };
+    typename pcl::PointCloud<PointT>::Ptr obstCloud { new pcl::PointCloud<PointT> };
+    typename pcl::PointCloud<PointT>::Ptr planeCloud{ new pcl::PointCloud<PointT> };
 
     for (int index : inliers->indices)
         planeCloud->points.push_back(cloud->points[index]);
@@ -247,10 +247,10 @@ ProcessPointClouds<PointT>::loadPcd(std::string file) {
 
 
 template<typename PointT>
-std::vector<boost::filesystem::path>
+std::vector<std::filesystem::path>
 ProcessPointClouds<PointT>::streamPcd(std::string dataPath) {
 
-    std::vector<boost::filesystem::path> paths(boost::filesystem::directory_iterator{ dataPath }, boost::filesystem::directory_iterator{});
+    std::vector<std::filesystem::path> paths(std::filesystem::directory_iterator{ dataPath }, std::filesystem::directory_iterator{});
 
     // sort files in accending order so playback is chronological
     sort(paths.begin(), paths.end());

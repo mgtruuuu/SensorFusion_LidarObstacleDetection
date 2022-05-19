@@ -4,7 +4,7 @@
 #include <ctime>
 #include <chrono>
 
-const double pi{ 3.1415 };
+constexpr double pi{ 3.1415 };
 
 struct Ray {
 	Vect3 origin;
@@ -23,22 +23,22 @@ struct Ray {
 	Ray(Vect3 setOrigin, double horizontalAngle, double verticalAngle, double setResolution)
 		: origin{ setOrigin }
 		, resolution{ setResolution }
-		, direction{ resolution * cos(verticalAngle) * cos(horizontalAngle), 
+		, direction{ resolution * cos(verticalAngle) * cos(horizontalAngle),
 			resolution * cos(verticalAngle) * sin(horizontalAngle),
 			resolution * sin(verticalAngle) }
-		, castPosition{ origin }, castDistance{ 0 } {}
+		, castPosition{ origin }, castDistance{ .0 } {}
 
 	void rayCast(
 		const std::vector<Car>& cars,
-		double minDistance, 
-		double maxDistance, 
+		double minDistance,
+		double maxDistance,
 		pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,
-		double slopeAngle, 
+		double slopeAngle,
 		double sderr) {
-		
+
 		// reset ray
 		castPosition = origin;
-		castDistance = 0;
+		castDistance = .0;
 
 		bool collision{ false };
 
@@ -46,10 +46,10 @@ struct Ray {
 			castPosition = castPosition + direction;
 			castDistance += resolution;
 
-			// Check if there is any collisions with ground slope
+			// Check if there is any collisions with ground slope.
 			collision = (castPosition.z <= castPosition.x * tan(slopeAngle));
 
-			// Check if there is any collisions with cars
+			// Check if there is any collisions with cars.
 			if (!collision && castDistance < maxDistance) {
 				for (Car car : cars) {
 					collision |= car.checkCollision(castPosition);
@@ -60,14 +60,16 @@ struct Ray {
 		}
 
 		if ((castDistance >= minDistance) && (castDistance <= maxDistance)) {
-			
+
 			// Add noise based on standard deviation error.
-			double rx{ static_cast<double>(rand()) / (RAND_MAX)};
+			double rx{ static_cast<double>(rand()) / (RAND_MAX) };
 			double ry{ static_cast<double>(rand()) / (RAND_MAX) };
 			double rz{ static_cast<double>(rand()) / (RAND_MAX) };
 
 			cloud->points.push_back(
-				pcl::PointXYZ{ static_cast<float>(castPosition.x + rx * sderr), static_cast<float>(castPosition.y + ry * sderr), static_cast<float>(castPosition.z + rz * sderr) });
+				pcl::PointXYZ{ static_cast<float>(castPosition.x + rx * sderr),
+				static_cast<float>(castPosition.y + ry * sderr),
+				static_cast<float>(castPosition.z + rz * sderr) });
 		}
 	}
 };
@@ -84,13 +86,13 @@ struct Lidar {
 	double sderr;
 
 	Lidar(std::vector<Car> setCars, double setGroundSlope)
-		: cloud{ new pcl::PointCloud<pcl::PointXYZ>{} }, position{ 0, 0, 2.6 } {
-		
+		: cloud{ new pcl::PointCloud<pcl::PointXYZ>{} }, position{ .0, .0, 2.6 } {
+
 		// TODO:: set minDistance to 5 to remove points from roof of ego car
 		minDistance = 5;
 		maxDistance = 50;
 		resoultion = 0.2;
-		
+
 		// TODO:: set sderr to 0.2 to get more interesting pcd files
 		sderr = 0.2;
 		cars = setCars;
@@ -98,11 +100,11 @@ struct Lidar {
 
 		// TODO:: increase number of layers to 8 to get higher resoultion pcd
 		int numLayers{ 8 };
-		
+
 		// the steepest vertical angle
 		double steepestAngle{ 30.0 * (-pi / 180) };
 		double angleRange{ 26.0 * (pi / 180) };
-		
+
 		// TODO:: set to pi/64 to get higher resoultion pcd
 		double horizontalAngleInc{ pi / 64 };
 
@@ -117,19 +119,21 @@ struct Lidar {
 	}
 
 	~Lidar() {
-		// pcl uses boost smart pointers for cloud pointer so we don't have to worry about manually freeing the memory
+		// pcl uses boost smart pointers for cloud pointer 
+		// so we don't have to worry about manually freeing the memory.
 	}
 
 	pcl::PointCloud<pcl::PointXYZ>::Ptr scan() {
 		cloud->points.clear();
-		auto startTime = std::chrono::steady_clock::now();
+		auto startTime{ std::chrono::steady_clock::now() };
 		for (Ray ray : rays)
 			ray.rayCast(cars, minDistance, maxDistance, cloud, groundSlope, sderr);
-		auto endTime = std::chrono::steady_clock::now();
-		auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+		auto endTime{ std::chrono::steady_clock::now() };
+		auto elapsedTime{ std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime) };
+
 		cout << "ray casting took " << elapsedTime.count() << " milliseconds" << endl;
 		cloud->width = cloud->points.size();
-		cloud->height = 1; // one dimensional unorganized point cloud dataset
+		cloud->height = 1;	// one dimensional unorganized point cloud dataset
 
 		return cloud;
 	}

@@ -33,11 +33,12 @@ struct KdTree {
 	void insertHelper(Node** ptrptr_node, unsigned int depth, std::vector<float> point, int id) {
 
 		// Tree in empty
-		if (*ptrptr_node == nullptr)
+		if (*ptrptr_node == nullptr) {
 			*ptrptr_node = new Node{ point, id };
+		}
 		else {
 			// Calculate current dim.
-			unsigned int cd{ depth % 2 };
+			unsigned int cd{ depth % 3 };
 
 			if (point[cd] < ((*ptrptr_node)->point[cd]))
 				insertHelper(&((*ptrptr_node)->ptr_left), depth + 1, point, id);
@@ -61,8 +62,8 @@ struct KdTree {
 
 				float distance{
 					static_cast<float>(sqrt(
-						pow((ptr_node->point[0] - target[0]), 2) + 
-						pow((ptr_node->point[1] - target[1]), 2) + 
+						pow((ptr_node->point[0] - target[0]), 2) +
+						pow((ptr_node->point[1] - target[1]), 2) +
 						pow((ptr_node->point[2] - target[2]), 2)))
 				};
 
@@ -81,9 +82,7 @@ struct KdTree {
 
 	// Return a list of point ids in the tree that are within distance of target.
 	std::vector<int> search(std::vector<float> target, float distanceTol) {
-		
-		
-		std::vector<int> ids;
+		pcl::Indices ids;
 		searchHelper(target, ptr_root, 0, distanceTol, ids);
 
 		return ids;
