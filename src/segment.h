@@ -15,7 +15,7 @@ std::unordered_set<int> newRansacPlane(
     float distanceTol) {
 
 
-    auto startTime{ std::chrono::steady_clock::now() };
+    const auto startTime{ std::chrono::steady_clock::now() };
 
 
     srand(time(nullptr));
@@ -32,7 +32,7 @@ std::unordered_set<int> newRansacPlane(
             inliers.insert(rand() % (cloud->points.size()));
 
 
-        float x1{}, y1{}, z1{}, x2{}, y2{}, z2{}, x3{}, y3{}, z3{};
+        float x1, y1, z1, x2, y2, z2, x3, y3, z3;
 
         auto itr{ inliers.begin() };
         x1 = cloud->points[*itr].x;
@@ -76,10 +76,9 @@ std::unordered_set<int> newRansacPlane(
     }
 
 
-    auto endTime{ std::chrono::steady_clock::now() };
+    const auto endTime{ std::chrono::steady_clock::now() };
     auto elapsedTime{ std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime) };
     std::cout << "newRansacPlane took " << elapsedTime.count() << " milliseconds." << std::endl;
-
 
     return inliersResult;
 }

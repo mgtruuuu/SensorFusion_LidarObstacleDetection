@@ -3,6 +3,13 @@
 #ifndef PROCESSPOINTCLOUDS_H_
 #define PROCESSPOINTCLOUDS_H_
 
+#include <ctime>
+#include <chrono>
+#include <filesystem>
+#include <iostream> 
+#include <string>  
+#include <vector>
+
 #include <pcl/io/pcd_io.h>
 #include <pcl/common/common.h>
 #include <pcl/filters/extract_indices.h>
@@ -12,12 +19,7 @@
 #include <pcl/segmentation/sac_segmentation.h>
 #include <pcl/segmentation/extract_clusters.h>
 #include <pcl/common/transforms.h>
-#include <ctime>
-#include <chrono>
-#include <filesystem>
-#include <iostream> 
-#include <string>  
-#include <vector>
+
 #include "../render/box.h"
 
 
@@ -66,5 +68,8 @@ public:
 
     std::vector<std::filesystem::path> streamPcd(std::string dataPath);
 };
+
+
+
 
 #endif /* PROCESSPOINTCLOUDS_H_ */
