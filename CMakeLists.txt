@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 
-add_definitions(-std=c++17)
+#add_definitions(-std=c++17)
 
 
 set(CXX_FLAGS "-Wall")
@@ -10,7 +10,7 @@ set(CMAKE_CXX_FLAGS, "${CXX_FLAGS}")
 project(playback)
 
 # Edit this line for your environments...
-#SET(PCL_DIR "D:/github_repository/vcpkg/installed/x64-windows/share/pcl")
+SET(PCL_DIR "D:/github_repository/vcpkg/installed/x64-windows/share/pcl")
 
 # Check the version...
 find_package(PCL 1.10 REQUIRED)

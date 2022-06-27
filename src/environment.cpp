@@ -41,6 +41,8 @@ int main(int argc, char** argv) {
     pcl::PointCloud<pcl::PointXYZI>::Ptr inputCloudI;
 
 
+
+
     while (!viewer->wasStopped()) {
 
         // Clear viewer.
@@ -122,17 +124,21 @@ void cityBlock(
     // ----------------------------------------------------
 
 
-    inputCloud = pointProcessor->FilterCloud(inputCloud, 0.3, Eigen::Vector4f{ -10.0f, -5.0f, -2.0f, 1.0f }, Eigen::Vector4f{ 30.0f, 8.0f, 1.0f, 1.0f });
+    using type_pcl = pcl::PointCloud<pcl::PointXYZI>::Ptr;
 
-    pcl::PointCloud<pcl::PointXYZI>::Ptr planeCloud{ new pcl::PointCloud<pcl::PointXYZI> };
-    pcl::PointCloud<pcl::PointXYZI>::Ptr obstCloud{  new pcl::PointCloud<pcl::PointXYZI> };
+
+    inputCloud = pointProcessor->FilterCloud(inputCloud, 0.3,
+        Eigen::Vector4f{ -10.0f, -5.0f, -2.0f, 1.0f }, Eigen::Vector4f{ 30.0f, 8.0f, 1.0f, 1.0f });
+
+    type_pcl planeCloud{ new pcl::PointCloud<pcl::PointXYZI> };
+    type_pcl obstCloud{  new pcl::PointCloud<pcl::PointXYZI> };
 
     std::unordered_set<int> inliers{ newRansacPlane(inputCloud, 25, 0.3f) };
 
 
-
-    std::pair<pcl::PointCloud<pcl::PointXYZI>::Ptr, pcl::PointCloud<pcl::PointXYZI>::Ptr> segmentCloud{
-        segmentPointClouds(inliers, inputCloud, planeCloud, obstCloud)
+    // obstCloud, planeCloud
+    std::pair<type_pcl, type_pcl> segmentCloud{ 
+        segmentPointClouds(inliers, inputCloud, planeCloud, obstCloud) 
     };
 
 
@@ -164,15 +170,15 @@ void cityBlock(
     for (int i{ 0 }; i < vectorClusters.size(); ++i)
         ptr_tree->insert(vectorClusters[i], i);
 
-    //                                                                                   3.0
+    //                                                                                      3.0
     std::vector<std::vector<int>> clusterIndices{ euclideanCluster(vectorClusters, ptr_tree, 1.0) };
 
 
-    std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> cloudClusters;
+    std::vector<type_pcl> cloudClusters;
 
     for (std::vector<int> getIndices : clusterIndices) {
 
-        pcl::PointCloud<pcl::PointXYZI>::Ptr cloudCluster{ new pcl::PointCloud<pcl::PointXYZI> };
+        type_pcl cloudCluster{ new pcl::PointCloud<pcl::PointXYZI> };
 
         for (auto index : getIndices) {
             cloudCluster->points.push_back(segmentCloud.first->points[index]);
@@ -190,7 +196,7 @@ void cityBlock(
     int clusterId{ 0 };
     std::vector<Color> colors{ Color{ 1.0f, 1.0f, .0f }, Color{ .0f, 1.0f, 1.0f }, Color{ 1.0f, .0f, 1.0f } };
 
-    for (pcl::PointCloud<pcl::PointXYZI>::Ptr cluster : cloudClusters) {
+    for (type_pcl cluster : cloudClusters) {
 
         std::cout << "cluster size : ";
         pointProcessor->numPoints(cluster);

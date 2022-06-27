@@ -12,19 +12,21 @@ pcl::visualization::PCLVisualizer::Ptr initScene(Box window, int zoom);
 
 
 
-
 void clusterHelper(
-    int indice,
-    const std::vector<std::vector<float>> points,
+    const int indice,
+    const std::vector<std::vector<float>>& points,
+    const float distanceTol,
+    KdTree* const ptr_tree,
     std::vector<int>& cluster,
-    std::vector<bool>& processed,
-    KdTree* ptr_tree,
-    float distanceTol);
+    std::vector<bool>& processed);
 
 std::vector<std::vector<int>> euclideanCluster(
     const std::vector<std::vector<float>>& points,
-    KdTree* ptr_tree,
-    float distanceTol);
+    KdTree* const ptr_tree, 
+    const float distanceTol);
+
+
+
 
 
 
@@ -50,28 +52,28 @@ pcl::visualization::PCLVisualizer::Ptr initScene(Box window, int zoom) {
 
 
 void clusterHelper(
-    int indice,
-    const std::vector<std::vector<float>> points,
+    const int indice,
+    const std::vector<std::vector<float>>& points,
+    const float distanceTol,
+    KdTree* const ptr_tree,
     std::vector<int>& cluster,
-    std::vector<bool>& processed,
-    KdTree* ptr_tree,
-    float distanceTol) {
+    std::vector<bool>& processed) {
 
     processed[indice] = true;
     cluster.push_back(indice);
 
     std::vector<int> nearest{ ptr_tree->search(points[indice], distanceTol) };
 
-    for (int id : nearest)
-        if (!processed[id])
-            clusterHelper(id, points, cluster, processed, ptr_tree, distanceTol);
+    for (const int id : nearest)
+        if (processed[id] == false)
+            clusterHelper(id, points, distanceTol, ptr_tree, cluster, processed);
 }
 
 
 std::vector<std::vector<int>> euclideanCluster(
     const std::vector<std::vector<float>>& points,
-    KdTree* ptr_tree,
-    float distanceTol) {
+    KdTree* const ptr_tree, 
+    const float distanceTol) {
 
     // TODO: Fill out this function to return list of indices for each cluster.
     std::vector<std::vector<int>> clusters;
@@ -86,7 +88,7 @@ std::vector<std::vector<int>> euclideanCluster(
         }
 
         std::vector<int> cluster;
-        clusterHelper(i, points, cluster, processed, ptr_tree, distanceTol);
+        clusterHelper(i, points, distanceTol, ptr_tree, cluster, processed);
         clusters.push_back(cluster);
         ++i;
     }

@@ -11,8 +11,8 @@
 
 std::unordered_set<int> newRansacPlane(
     pcl::PointCloud<pcl::PointXYZI>::Ptr cloud,
-    int maxIterations,
-    float distanceTol) {
+    const int maxIterations,
+    const float distanceTol) {
 
 
     const auto startTime{ std::chrono::steady_clock::now() };
@@ -22,7 +22,9 @@ std::unordered_set<int> newRansacPlane(
 
     std::unordered_set<int> inliersResult;
 
-    while (maxIterations--) {
+    int it{ maxIterations };
+
+    while (it--) {
 
         // Randomly sample subset and fit plane.
 
